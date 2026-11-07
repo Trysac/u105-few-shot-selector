@@ -1,19 +1,20 @@
-# Security notes
+# Security
 
-## Threat model
+## Threat Model
 
-`trysac-few-shot-selector` is a pure library without I/O. The main risks are:
+`few_shot_selector` processes potentially untrusted user queries and candidate example pools.
 
-- **Supply chain**: a compromised dependency or CI action. Mitigation: no runtime dependencies,
-  Dependabot weekly updates, actions pinned to major versions, minimal workflow permissions.
-- **Leaked secrets**: tokens committed by mistake. Mitigation: `gitleaks` runs in the local gates
-  and in CI; `.env` files are git-ignored.
-- **Untrusted input**: callers may pass hostile strings. Mitigation: validate input and fail with
-  explicit exceptions; never `eval`, `exec` or deserialize untrusted data.
+### Defended
 
-## Publishing
+- **Denial of Service**: 
+  - `max_input_chars` (default 20,000) prevents oversized strings from straining resources during regex and hashing.
+  - `max_pool` (default 10,000) limits the size of candidate pools, preventing quadratic complexity memory/CPU usage.
+- **Input Validation**: 
+  - Embeddings are checked for `NaN`, `Infinity`, and dimension consistency.
+  - `counter` functions are validated for non-negative integers.
+- **Information Disclosure**: 
+  - Error messages truncate inputs (max 200 chars) to prevent log-based leakage.
 
-Releases are published to PyPI with trusted publishing (OIDC) when available, never with a
-long-lived token stored in the repository.
+### Not Defended
 
-To report a vulnerability, see [SECURITY.md](../SECURITY.md).
+- **Prompt Injection**: The library assumes inputs provided by the user are untrusted and does not sanitize content against prompt injection, as it is a pure selection utility.

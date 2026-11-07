@@ -1,48 +1,44 @@
 # few-shot-selector
 
-[![PyPI version](https://img.shields.io/pypi/v/trysac-few-shot-selector)](https://pypi.org/project/trysac-few-shot-selector/)
-[![License: MIT](https://img.shields.io/pypi/l/trysac-few-shot-selector)](LICENSE)
 [![CI](https://github.com/Trysac/u105-few-shot-selector/actions/workflows/ci.yml/badge.svg)](https://github.com/Trysac/u105-few-shot-selector/actions/workflows/ci.yml)
 
-Select few-shot examples by similarity and diversity with maximal marginal relevance, a deterministic hashing embedder, token budgets and duplicate suppression
+Select few-shot examples by similarity and diversity with maximal marginal relevance, a deterministic hashing embedder, token budgets and duplicate suppression.
 
-## Problem
+## Installation
 
-Describe in two or three sentences the concrete problem this utility solves, who hits it, and what
-they do today without it. Replace this paragraph when the first real feature lands.
-
-## Install
-
-```sh
+```bash
 pip install trysac-few-shot-selector
-# or
-uv add trysac-few-shot-selector
 ```
-
-Requires Python 3.10 or newer. No runtime dependencies.
 
 ## Usage
 
 ```python
-import few_shot_selector
+from few_shot_selector import Example, select, format_examples
 
-# normalize() trims surrounding whitespace and lower-cases the text.
-print(few_shot_selector.normalize("  Hello World "))  # -> "hello world"
-
-# Blank input is rejected explicitly instead of returning an empty string.
-try:
-    few_shot_selector.normalize("   ")
-except ValueError as exc:
-    print(f"rejected: {exc}")
+pool = [Example("1", "Say hello in French", "Bonjour"), Example("2", "Say yes in French", "Oui")]
+sel = select("Say thanks in French", pool, k=1)
+output = format_examples(sel.examples)
 ```
 
-## Documentation
+## Features
 
-- [Architecture](docs/ARCHITECTURE.md) and [decisions](docs/decisions/)
-- [Testing](docs/TESTING.md) and [security](docs/SECURITY.md)
-- [Project record](docs/PROJECT.md) and [stack](docs/STACK.md)
-- [Changelog](CHANGELOG.md) and [contributing guide](CONTRIBUTING.md)
+- **Maximal Marginal Relevance (MMR)**: Balance relevance with diversity.
+- **Deterministic Hashing Embedder**: Built-in blake2b feature hashing that guarantees reproducibility without external dependencies.
+- **Token Budget & Duplicate Controls**: Enforce token limits and filter out redundant examples.
+- **Safe Templating**: Preserves braces in example inputs.
 
-## License
+## Public API Summary
 
-[MIT](LICENSE) (c) 2026 Miguel Gomez
+- **Core Structures**: `Example(id, input, output)` and `Selection(examples, scores, skipped_for_budget)`.
+- **Main functions**: `select()` (MMR selection with budget/dup control), `mmr()` (pure calculation), `cosine()` (similarity), `format_examples()` (safe string templating).
+- **Embedder**: `HashingEmbedder(dim=256)` generates deterministic vectors.
+- **Errors**: `SelectorError` raised with codes: `invalid_k`, `invalid_lambda`, `dimension_mismatch`, `invalid_embedding`, `pool_too_large`, `input_too_large`, `invalid_counter`.
+- **Limits**: Configurable via `max_pool` (default 10,000) and `max_input_chars` (default 20,000).
+
+## Why not <best-known alternative>?
+
+Unlike frameworks such as LangChain's `MaxMarginalRelevanceExampleSelector`, this utility is built with zero external dependencies, features a deterministic default embedder, and offers granular, integrated token budget and duplicate suppression.
+
+## Security
+
+See [docs/SECURITY.md](docs/SECURITY.md) for details on threat modeling and input constraints.

@@ -1,29 +1,13 @@
 # Architecture
 
-## Purpose
+## Overview
 
-`trysac-few-shot-selector` is a small, dependency-free Python library: Select few-shot examples by similarity and diversity with maximal marginal relevance, a deterministic hashing embedder, token budgets and duplicate suppression
+`few_shot_selector` enables deterministic few-shot prompt selection. It uses MMR to optimize for both relevance to the query and diversity of the selected set.
 
-## Shape
+## Core Components
 
-```text
-caller code --> few_shot_selector (public API in __init__.py)
-                    |
-                    +-- pure functions, no I/O, no global state
-```
-
-- **Public API**: the names listed in `__all__` of `src/few_shot_selector/__init__.py`. Anything else is
-  internal and may change without a major version.
-- **Errors**: invalid input raises built-in exceptions (`ValueError`, `TypeError`) with a clear
-  message; the library never prints or exits.
-- **Side effects**: none. If a feature needs I/O, isolate it in its own module behind a small
-  interface and record the choice in an ADR.
-
-## Quality contract
-
-`scripts/check.py` is the single definition of the gates; `fabrica.json` tells the factory and CI
-how to run it. See [TESTING.md](TESTING.md).
-
-## Decisions
-
-Architecture decisions are recorded in [decisions/](decisions/) as numbered ADRs.
+- **Dataclasses**: `Example` (candidate demonstration) and `Selection` (result containing chosen examples, scores, and skipped IDs).
+- **Numeric Engine**: `cosine` computes L2-normalized similarity. `mmr` implements: $Score(d) = \lambda \cos(q, d) - (1 - \lambda) \max_{s \in S} \cos(d, s)$. Tie-breaks favor the lowest pool index.
+- **`HashingEmbedder`**: Deterministic feature hashing using `hashlib.blake2b`. It processes NFKC-normalized tokens to generate feature indices and pseudo-random signs, guaranteeing identical outputs across environments.
+- **Orchestrator**: `select` coordinates embedding, MMR ranking, duplicate filtering via `duplicate_threshold`, and budget management using a provided `counter` (default: `word_count`).
+- **Templating**: `format_examples` performs safe replacement of `{input}` and `{output}` tokens, preserving braces in raw text.

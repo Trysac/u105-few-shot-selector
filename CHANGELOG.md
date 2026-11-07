@@ -9,4 +9,5 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- Initial release of few_shot_selector with MMR example selection, HashingEmbedder, token budget constraints, and duplicate suppression.
 - Initial project structure from the factory utility template.

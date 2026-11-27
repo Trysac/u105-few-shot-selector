@@ -6,8 +6,10 @@ Select few-shot examples by similarity and diversity with maximal marginal relev
 
 ## Installation
 
+Not published to PyPI yet. Install it from GitHub:
+
 ```bash
-pip install trysac-few-shot-selector
+pip install "git+https://github.com/Trysac/u105-few-shot-selector"
 ```
 
 ## Usage
